@@ -8,39 +8,20 @@ import {
   Text,
   View,
 } from 'react-native';
-import {NamedStyles, moderateScale} from 'react-native-size-matters';
-import {SIZE_MATTERS_BASE_WIDTH} from '@env';
+import {ChnirtStyleSheet} from '../utils';
 
-const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width; // application
+const windowHeight = Dimensions.get('window').height;
 
 const iPhoneXViewport = {
   width: 375,
   height: 812,
 };
 
-const makeStyles = <T extends NamedStyles<T> | NamedStyles<any>>(
-  _styles: T | NamedStyles<T>,
-) => {
-  const same = Number(SIZE_MATTERS_BASE_WIDTH) === windowWidth;
-  const convertScaleObj = (o: any): any => {
-    Object.keys(o).forEach(k => {
-      if (typeof o[k] === 'object') {
-        convertScaleObj(o[k]);
-      }
-      if (typeof o[k] === 'number') {
-        o[k] = moderateScale(o[k], same ? 0 : undefined);
-      }
-    });
-    return o;
-  };
-  return StyleSheet.create(convertScaleObj(_styles));
-};
-
-const styleSheetStyles = StyleSheet.create({
+const chnirtStyleSheet = ChnirtStyleSheet.create({
+  flex1: {flex: 1},
   container: {
-    width: iPhoneXViewport.width,
-    height: iPhoneXViewport.height,
+    flex: 1,
     justifyContent: 'flex-end',
   },
   image: {
@@ -48,7 +29,11 @@ const styleSheetStyles = StyleSheet.create({
     width: 375,
     height: 812,
   },
-  contentContainer: {gap: 44, marginHorizontal: 22},
+  contentContainer: {
+    gap: 44,
+    marginHorizontal: 22,
+  },
+  brandingContainer: {alignItems: 'center'},
   brandingImage: {
     width: 142,
     height: 101,
@@ -59,67 +44,114 @@ const styleSheetStyles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
   },
+  primaryButtonContainer: {
+    backgroundColor: '#1E232C',
+  },
+  outlineButtonContainer: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#1E232C',
+  },
   font: {
     fontSize: 15,
+  },
+  loginText: {
+    color: '#FFFFFF',
+  },
+  registerText: {
+    color: '#1E232C',
+  },
+  continueText: {
+    color: '#35C2C1',
+  },
+
+  absoluteContainer: {
+    position: 'absolute',
+    borderWidth: 1,
+    alignSelf: 'center',
+    bottom: 0,
+    left: 0,
+    alignItems: 'center',
+  },
+});
+
+const styleStyleSheet = StyleSheet.create({
+  flex1: {flex: 1},
+  container: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  image: {
+    position: 'absolute',
+    width: 375,
+    height: 812,
+  },
+  contentContainer: {
+    gap: 44,
+    marginHorizontal: 22,
+  },
+  brandingContainer: {alignItems: 'center'},
+  brandingImage: {
+    width: 142,
+    height: 101,
+  },
+  buttonGroupContainer: {gap: 15},
+  buttonContainer: {
+    padding: 19,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  primaryButtonContainer: {
+    backgroundColor: '#1E232C',
+  },
+  outlineButtonContainer: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#1E232C',
+  },
+  font: {
+    fontSize: 15,
+  },
+  loginText: {
+    color: '#FFFFFF',
+  },
+  registerText: {
+    color: '#1E232C',
+  },
+  continueText: {
+    color: '#35C2C1',
+  },
+
+  absoluteContainer: {
+    position: 'absolute',
+    borderWidth: 1,
+    alignSelf: 'center',
+    bottom: 0,
+    left: 0,
+    alignItems: 'center',
   },
 });
 
 const Login = () => {
   const [scaled, setScaled] = useState(false);
-  const styles = scaled
-    ? makeStyles({
-        container: {
-          width: iPhoneXViewport.width,
-          height: iPhoneXViewport.height,
-          justifyContent: 'flex-end',
-        },
-        image: {
-          position: 'absolute',
-          width: 375,
-          height: 812,
-        },
-        contentContainer: {gap: 44, marginHorizontal: 22},
-        brandingImage: {
-          width: 142,
-          height: 101,
-        },
-        buttonGroupContainer: {gap: 15},
-        buttonContainer: {
-          padding: 19,
-          borderRadius: 8,
-          alignItems: 'center',
-        },
-        font: {
-          fontSize: 15,
-        },
-      })
-    : styleSheetStyles;
-  console.log('styles---', styles);
+  const styles = scaled ? chnirtStyleSheet : styleStyleSheet;
 
   return (
-    <View>
-      <ScrollView>
+    <View style={styles.flex1}>
+      <ScrollView style={styles.flex1} contentContainerStyle={styles.flex1}>
         <View style={styles.container}>
           <Image
-            style={[
-              styles.image,
-              // scaled && styles.scaledImage
-            ]}
+            style={styles.image}
             source={require('../assets/background.png')}
+            resizeMode="contain"
           />
 
-          <View
-            style={[
-              styles.contentContainer,
-              // scaled && styles.scaledContentContainer,
-            ]}>
-            <View style={{alignItems: 'center'}}>
+          <View style={styles.contentContainer}>
+            <View style={styles.brandingContainer}>
               <Image
-                style={[
-                  styles.brandingImage,
-                  // scaled && styles.scaledBrandingImage,
-                ]}
+                style={styles.brandingImage}
                 source={require('../assets/branding.png')}
+                resizeMode="contain"
               />
             </View>
             <View style={styles.buttonGroupContainer}>
@@ -127,19 +159,9 @@ const Login = () => {
                 <View
                   style={[
                     styles.buttonContainer,
-                    {
-                      backgroundColor: '#1E232C',
-                    },
+                    styles.primaryButtonContainer,
                   ]}>
-                  <Text
-                    style={[
-                      styles.font,
-                      {
-                        color: '#FFFFFF',
-                      },
-                    ]}>
-                    Login
-                  </Text>
+                  <Text style={[styles.font, styles.loginText]}>Login</Text>
                 </View>
               </Pressable>
 
@@ -147,19 +169,9 @@ const Login = () => {
                 <View
                   style={[
                     styles.buttonContainer,
-                    {
-                      backgroundColor: '#FFFFFF',
-                      borderWidth: 1,
-                      borderColor: '#1E232C',
-                    },
+                    styles.outlineButtonContainer,
                   ]}>
-                  <Text
-                    style={[
-                      styles.font,
-                      {
-                        color: '#1E232C',
-                      },
-                    ]}>
+                  <Text style={[styles.font, styles.registerText]}>
                     Register
                   </Text>
                 </View>
@@ -169,13 +181,7 @@ const Login = () => {
             <View>
               <Pressable>
                 <View style={styles.buttonContainer}>
-                  <Text
-                    style={[
-                      styles.font,
-                      {
-                        color: '#35C2C1',
-                      },
-                    ]}>
+                  <Text style={[styles.font, styles.continueText]}>
                     Continue as a guest
                   </Text>
                 </View>
@@ -185,15 +191,7 @@ const Login = () => {
         </View>
       </ScrollView>
 
-      <View
-        style={{
-          position: 'absolute',
-          borderWidth: 1,
-          alignSelf: 'center',
-          bottom: 0,
-          left: 0,
-          alignItems: 'center',
-        }}>
+      <View style={styles.absoluteContainer}>
         <Text>
           {windowWidth}x{windowHeight}
         </Text>
@@ -202,15 +200,7 @@ const Login = () => {
         </Text>
         <Pressable onPress={() => setScaled(prevState => !prevState)}>
           <View style={styles.buttonContainer}>
-            <Text
-              style={[
-                styles.font,
-                {
-                  color: '#35C2C1',
-                },
-              ]}>
-              {scaled ? 'Scaled' : 'Not scale'}
-            </Text>
+            <Text style={styles.font}>{scaled ? 'Scaled' : 'Not scale'}</Text>
           </View>
         </Pressable>
       </View>
