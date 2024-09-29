@@ -12,16 +12,6 @@ import {useNavigation} from '@react-navigation/native';
 
 import {ChnirtStyleSheet} from '../utils';
 import BackArrow from '../assets/back_arrow.svg';
-import Facebook from '../assets/facebook.svg';
-import Google from '../assets/google.svg';
-import Apple from '../assets/apple.svg';
-
-type LoginParamsType = {
-  email: string;
-  password: string;
-};
-
-type LoginType = 'facebook' | 'google' | 'apple';
 
 const styles = ChnirtStyleSheet.create({
   flex1: {flex: 1},
@@ -40,11 +30,18 @@ const styles = ChnirtStyleSheet.create({
     marginTop: 30,
     gap: 30,
   },
-  welcomeContainer: {},
+  welcomeContainer: {
+    gap: 10,
+  },
   welcomeText: {
     fontSize: 30,
     fontWeight: '700',
     color: '#1E232C',
+  },
+  descriptionText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#838BA1',
   },
   form: {
     gap: 16,
@@ -128,40 +125,21 @@ const styles = ChnirtStyleSheet.create({
   },
 });
 
-const Login = () => {
+const ForgotPassword = () => {
   const navigation = useNavigation();
 
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
 
   const goBack = useCallback(() => {
     navigation.goBack();
   }, [navigation]);
 
-  const navigateForgotPassword = useCallback(() => {
-    navigation.navigate('ForgotPassword');
-  }, [navigation]);
+  const sendCode = useCallback((email: string) => {
+    console.log('🚀 ~ sendCode ~ email:', email);
+  }, []);
 
-  const login = useCallback(
-    (loginParams: LoginParamsType, type?: LoginType) => {
-      console.log('🚀 ~ login ~ loginParams:', loginParams);
-      console.log('🚀 ~ login ~ type:', type);
-      switch (type) {
-        case 'facebook':
-          break;
-        case 'google':
-          break;
-        case 'apple':
-          break;
-        default:
-          break;
-      }
-    },
-    [],
-  );
-
-  const navigateRegister = useCallback(() => {
-    navigation.navigate('Register');
+  const navigateLogin = useCallback(() => {
+    navigation.navigate('Login');
   }, [navigation]);
 
   return (
@@ -178,8 +156,11 @@ const Login = () => {
 
               <View style={styles.formContainer}>
                 <View style={styles.welcomeContainer}>
-                  <Text style={styles.welcomeText}>
-                    Welcome back! Glad to see you, Again!
+                  <Text style={styles.welcomeText}>Forgot Password?</Text>
+
+                  <Text style={styles.descriptionText}>
+                    Don't worry! It occurs. Please enter the email address
+                    linked with your account.
                   </Text>
                 </View>
 
@@ -191,72 +172,27 @@ const Login = () => {
                     placeholder="Enter your email"
                     placeholderTextColor="#8391A1"
                   />
-
-                  <TextInput
-                    style={styles.input}
-                    value={password}
-                    onChangeText={setPassword}
-                    placeholder="Enter your password"
-                    placeholderTextColor="#8391A1"
-                    secureTextEntry
-                  />
-
-                  <View style={styles.forgotPasswordContainer}>
-                    <Pressable onPress={navigateForgotPassword}>
-                      <Text style={styles.forgotPasswordText}>
-                        Forgot Password?
-                      </Text>
-                    </Pressable>
-                  </View>
                 </View>
 
-                <Pressable onPress={() => login({email, password})}>
+                <Pressable onPress={() => sendCode(email)}>
                   <View
                     style={[
                       styles.buttonContainer,
                       styles.primaryButtonContainer,
                     ]}>
-                    <Text style={[styles.font, styles.loginText]}>Login</Text>
+                    <Text style={[styles.font, styles.loginText]}>
+                      Send Code
+                    </Text>
                   </View>
                 </Pressable>
-
-                <View style={styles.loginWithContainer}>
-                  <View style={styles.loginWithHeader}>
-                    <View style={styles.divider} />
-                    <View>
-                      <Text style={styles.loginWithText}>Or Login with</Text>
-                    </View>
-                    <View style={styles.divider} />
-                  </View>
-
-                  <View style={styles.loginWithBody}>
-                    <Pressable
-                      style={styles.socialButton}
-                      onPress={() => login({email, password}, 'facebook')}>
-                      <Facebook />
-                    </Pressable>
-
-                    <Pressable
-                      style={styles.socialButton}
-                      onPress={() => login({email, password}, 'google')}>
-                      <Google />
-                    </Pressable>
-
-                    <Pressable
-                      style={styles.socialButton}
-                      onPress={() => login({email, password}, 'apple')}>
-                      <Apple />
-                    </Pressable>
-                  </View>
-                </View>
               </View>
             </View>
 
             <View style={styles.buttonContainer}>
               <Text style={styles.font}>
-                Don’t have an account?{' '}
-                <TouchableWithoutFeedback onPress={navigateRegister}>
-                  <Text style={styles.registerNowText}>Register Now</Text>
+                Remember Password?{' '}
+                <TouchableWithoutFeedback onPress={navigateLogin}>
+                  <Text style={styles.registerNowText}>Login</Text>
                 </TouchableWithoutFeedback>
               </Text>
             </View>
@@ -267,4 +203,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default ForgotPassword;
