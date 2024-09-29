@@ -13,6 +13,9 @@ import WelcomeScreen from './src/screens/Welcome';
 import LoginScreen from './src/screens/Login';
 import RegisterScreen from './src/screens/Register';
 import ForgotPasswordScreen from './src/screens/ForgotPassword';
+import VerificationScreen from './src/screens/Verification';
+import CreateNewPasswordScreen from './src/screens/CreateNewPassword';
+import SuccessScreen from './src/screens/Success';
 
 const Stack = createNativeStackNavigator();
 
@@ -27,6 +30,12 @@ function App(): JSX.Element {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+        <Stack.Screen name="Verification" component={VerificationScreen} />
+        <Stack.Screen
+          name="CreateNewPassword"
+          component={CreateNewPasswordScreen}
+        />
+        <Stack.Screen name="Success" component={SuccessScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

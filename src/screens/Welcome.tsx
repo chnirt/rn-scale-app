@@ -2,6 +2,7 @@ import React, {useCallback} from 'react';
 import {
   Image,
   ImageBackground,
+  Linking,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -77,6 +78,14 @@ const Welcome = () => {
     navigation.navigate('Register');
   }, [navigation]);
 
+  const handleContinue = useCallback(() => {
+    const url =
+      'https://www.figma.com/community/file/1117753494561810315/login-register-app-ui-kit';
+    Linking.openURL(url).catch(err =>
+      console.error('Failed to open URL:', err),
+    );
+  }, []);
+
   return (
     <ScrollView bounces={false}>
       <ImageBackground
@@ -119,7 +128,7 @@ const Welcome = () => {
             </View>
 
             <View>
-              <Pressable>
+              <Pressable onPress={handleContinue}>
                 <View style={styles.buttonContainer}>
                   <Text style={[styles.font, styles.continueText]}>
                     Continue as a guest

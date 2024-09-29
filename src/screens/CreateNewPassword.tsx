@@ -5,7 +5,6 @@ import {
   Pressable,
   SafeAreaView,
   TextInput,
-  TouchableWithoutFeedback,
   ScrollView,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
@@ -67,14 +66,6 @@ const styles = ChnirtStyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
   },
-  forgotPasswordContainer: {
-    alignItems: 'flex-end',
-  },
-  forgotPasswordText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#6A707C',
-  },
   buttonContainer: {
     padding: 19,
     borderRadius: 8,
@@ -91,60 +82,25 @@ const styles = ChnirtStyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
   },
-  loginWithContainer: {
-    gap: 20,
-  },
-  loginWithHeader: {flexDirection: 'row', alignItems: 'center', gap: 12},
-  divider: {
-    borderTopWidth: 1,
-    borderColor: '#E8ECF4',
-    flex: 1,
-  },
-  loginWithText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#8391A1',
-  },
-  loginWithBody: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  socialButton: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 8,
-    borderColor: '#E8ECF4',
-    paddingVertical: 12,
-  },
-  registerNowText: {
-    fontWeight: '700',
-    color: '#35C2C1',
-  },
 });
 
-const ForgotPassword = () => {
+const CreateNewPassword = () => {
   const navigation = useNavigation();
 
-  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const goBack = useCallback(() => {
     navigation.goBack();
   }, [navigation]);
 
-  const sendCode = useCallback(
-    (email: string) => {
-      console.log('🚀 ~ sendCode ~ email:', email);
-      navigation.navigate('Verification');
+  const createNewPassword = useCallback(
+    (password: string) => {
+      console.log('🚀 ~ CreateNewPassword ~ password:', password);
+      navigation.navigate('Success');
     },
     [navigation],
   );
-
-  const navigateLogin = useCallback(() => {
-    navigation.navigate('Login');
-  }, [navigation]);
 
   return (
     <ScrollView bounces={false}>
@@ -160,45 +116,45 @@ const ForgotPassword = () => {
 
               <View style={styles.formContainer}>
                 <View style={styles.welcomeContainer}>
-                  <Text style={styles.welcomeText}>Forgot Password?</Text>
+                  <Text style={styles.welcomeText}>Create new password</Text>
 
                   <Text style={styles.descriptionText}>
-                    Don't worry! It occurs. Please enter the email address
-                    linked with your account.
+                    Your new password must be unique from those previously used.
                   </Text>
                 </View>
 
                 <View style={styles.form}>
                   <TextInput
                     style={styles.input}
-                    value={email}
-                    onChangeText={setEmail}
-                    placeholder="Enter your email"
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder="New Password"
                     placeholderTextColor="#8391A1"
+                    secureTextEntry
+                  />
+
+                  <TextInput
+                    style={styles.input}
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    placeholder="Confirm Password"
+                    placeholderTextColor="#8391A1"
+                    secureTextEntry
                   />
                 </View>
 
-                <Pressable onPress={() => sendCode(email)}>
+                <Pressable onPress={() => createNewPassword(password)}>
                   <View
                     style={[
                       styles.buttonContainer,
                       styles.primaryButtonContainer,
                     ]}>
                     <Text style={[styles.font, styles.loginText]}>
-                      Send Code
+                      Reset Password
                     </Text>
                   </View>
                 </Pressable>
               </View>
-            </View>
-
-            <View style={styles.buttonContainer}>
-              <Text style={styles.font}>
-                Remember Password?{' '}
-                <TouchableWithoutFeedback onPress={navigateLogin}>
-                  <Text style={styles.registerNowText}>Login</Text>
-                </TouchableWithoutFeedback>
-              </Text>
             </View>
           </View>
         </SafeAreaView>
@@ -207,4 +163,4 @@ const ForgotPassword = () => {
   );
 };
 
-export default ForgotPassword;
+export default CreateNewPassword;
