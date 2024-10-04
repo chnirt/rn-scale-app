@@ -54,6 +54,10 @@ const styles = ChnirtStyleSheet.create({
     justifyContent: 'center',
     paddingLeft: 8,
   },
+  backIcon: {
+    width: 19,
+    height: 19,
+  },
   input: {
     borderRadius: 8,
     backgroundColor: '#F7F8F9',
@@ -110,7 +114,10 @@ const CreateNewPassword = () => {
             <View>
               <Pressable onPress={goBack}>
                 <View style={styles.button}>
-                  <BackArrow />
+                  <BackArrow
+                    width={styles.backIcon.width}
+                    height={styles.backIcon.height}
+                  />
                 </View>
               </Pressable>
 

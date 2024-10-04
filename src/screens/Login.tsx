@@ -58,6 +58,10 @@ const styles = ChnirtStyleSheet.create({
     justifyContent: 'center',
     paddingLeft: 8,
   },
+  backIcon: {
+    width: 19,
+    height: 19,
+  },
   input: {
     borderRadius: 8,
     backgroundColor: '#F7F8F9',
@@ -126,6 +130,10 @@ const styles = ChnirtStyleSheet.create({
     fontWeight: '700',
     color: '#35C2C1',
   },
+  socialIcon: {
+    width: 26,
+    height: 26,
+  },
 });
 
 const Login = () => {
@@ -172,7 +180,10 @@ const Login = () => {
             <View>
               <Pressable onPress={goBack}>
                 <View style={styles.button}>
-                  <BackArrow />
+                  <BackArrow
+                    width={styles.backIcon.width}
+                    height={styles.backIcon.height}
+                  />
                 </View>
               </Pressable>
 
@@ -233,19 +244,28 @@ const Login = () => {
                     <Pressable
                       style={styles.socialButton}
                       onPress={() => login({email, password}, 'facebook')}>
-                      <Facebook />
+                      <Facebook
+                        width={styles.socialIcon.width}
+                        height={styles.socialIcon.height}
+                      />
                     </Pressable>
 
                     <Pressable
                       style={styles.socialButton}
                       onPress={() => login({email, password}, 'google')}>
-                      <Google />
+                      <Google
+                        width={styles.socialIcon.width}
+                        height={styles.socialIcon.height}
+                      />
                     </Pressable>
 
                     <Pressable
                       style={styles.socialButton}
                       onPress={() => login({email, password}, 'apple')}>
-                      <Apple />
+                      <Apple
+                        width={styles.socialIcon.width}
+                        height={styles.socialIcon.height}
+                      />
                     </Pressable>
                   </View>
                 </View>

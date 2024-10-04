@@ -7,11 +7,16 @@
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",
-    "test": "jest"
+    "test": "jest",
+    "generate-icons": "ts-node scripts/generate-icons.ts",
+    "g:1": "npm run generate-icons -- /Users/admin/Desktop/Chnirt/rn-scale-app/scripts/Icon.png",
+    "g:2": "npm run generate-icons -- /Users/admin/Desktop/Chnirt/rn-scale-app/scripts/Icon2.png"
   },
   "dependencies": {
     "@react-navigation/native": "6.1.18",
     "@react-navigation/native-stack": "6.11.0",
+    "@types/node": "^22.7.4",
+    "fs-extra": "^11.2.0",
     "react": "18.2.0",
     "react-native": "0.72.7",
     "react-native-safe-area-context": "4.11.0",
@@ -35,6 +40,8 @@
     "prettier": "^2.4.1",
     "react-native-dotenv": "^3.4.9",
     "react-test-renderer": "18.2.0",
+    "sharp": "^0.33.5",
+    "ts-node": "^10.9.2",
     "typescript": "4.8.4"
   },
   "engines": {

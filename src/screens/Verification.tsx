@@ -55,6 +55,10 @@ const styles = ChnirtStyleSheet.create({
     justifyContent: 'center',
     paddingLeft: 8,
   },
+  backIcon: {
+    width: 19,
+    height: 19,
+  },
   buttonContainer: {
     padding: 19,
     borderRadius: 8,
@@ -87,6 +91,7 @@ const styles = ChnirtStyleSheet.create({
     borderWidth: 1,
     borderColor: '#E8ECF4',
     borderRadius: 8,
+    height: 60
   },
   validCodeInputContainer: {
     backgroundColor: '#FFFFFF',
@@ -137,7 +142,10 @@ const Verification = () => {
             <View>
               <Pressable onPress={goBack}>
                 <View style={styles.button}>
-                  <BackArrow />
+                  <BackArrow
+                    width={styles.backIcon.width}
+                    height={styles.backIcon.height}
+                  />
                 </View>
               </Pressable>
 
@@ -178,7 +186,10 @@ const Verification = () => {
                     <TextInput
                       style={styles.digitsText}
                       value={digits}
-                      onChangeText={setDigits}
+                      onChangeText={text => {
+                        const filteredText = text.replace(/[^0-9]/g, ''); // Remove non-numeric characters
+                        setDigits(filteredText);
+                      }}
                       keyboardType="number-pad"
                       maxLength={LIMIT_DIGITS} // Limit to 4 digits (or adjust as needed)
                       autoFocus // Auto-focus on input (optional)
