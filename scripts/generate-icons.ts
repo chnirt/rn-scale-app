@@ -5,25 +5,18 @@ import fs from 'fs';
 // Read the logoPath from command-line arguments
 const logoPath = process.argv[2];
 
-if (!logoPath) {
+if (!logoPath || !fs.existsSync(logoPath)) {
   console.error(
-    'Error: logoPath is required. Please provide the path to the logo.',
+    'Error: Valid logoPath is required. Please provide the path to the logo.',
   );
-  process.exit(1);
-}
-
-// Check if the file exists
-if (!fs.existsSync(logoPath)) {
-  console.error(`Error: File not found at path: ${logoPath}`);
   process.exit(1);
 }
 
 // Define the project name from package.json
 const packageJsonPath = path.join(__dirname, '..', 'package.json');
-const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-const projectName = packageJson.name;
+const projectName = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')).name;
 
-// Define paths for copying Contents.json for iOS and Android projects
+// Define paths for iOS and Android projects
 const iosAssetsPath = path.join(
   __dirname,
   '..',
@@ -49,7 +42,7 @@ const appIconContentsSourcePath = path.join(
   'Contents.json',
 );
 
-// Ensure directories exist for Android
+// Define Android resource directories and ensure they exist
 const androidResourceDirectories = [
   {size: 48, folder: 'mipmap-mdpi'},
   {size: 72, folder: 'mipmap-hdpi'},
@@ -58,110 +51,109 @@ const androidResourceDirectories = [
   {size: 192, folder: 'mipmap-xxxhdpi'},
 ];
 
-// Create Android resource directories if they don't exist
 androidResourceDirectories.forEach(({folder}) => {
   const dirPath = path.join(androidAssetsPath, folder);
   fs.mkdirSync(dirPath, {recursive: true});
 });
 
 /**
- * Reusable function to copy a file from source to destination
+ * Copy a file from source to destination with error handling
  * @param {string} source - The path to the source file
  * @param {string} destination - The path to the destination
  */
-const copyFileToDestination = (source: string, destination: string): void => {
-  fs.copyFile(source, destination, err => {
-    if (err) {
-      console.error(
-        `Error copying file from ${source} to ${destination}:`,
-        err,
-      );
-    } else {
-      console.log(`Successfully copied file to ${destination}`);
-    }
+const copyFileToDestination = (
+  source: string,
+  destination: string,
+): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    fs.copyFile(source, destination, err => {
+      if (err) {
+        console.error(
+          `Error copying file from ${source} to ${destination}:`,
+          err,
+        );
+        reject(err);
+      } else {
+        console.log(`Successfully copied file to ${destination}`);
+        resolve();
+      }
+    });
   });
 };
 
 /**
- * Generate icons for iOS
+ * Generate iOS icons
  */
 async function generateIOSIcons() {
-  try {
-    const iosSizes = [
-      16, 20, 29, 32, 40, 48, 50, 55, 57, 58, 60, 64, 66, 72, 76, 80, 87, 88,
-      92, 100, 102, 114, 120, 128, 144, 152, 167, 172, 180, 192, 196, 216, 234,
-      256, 258, 512, 1024,
-    ];
+  const iosSizes = [
+    16, 20, 29, 32, 40, 48, 50, 55, 57, 58, 60, 64, 66, 72, 76, 80, 87, 88, 92,
+    100, 102, 114, 120, 128, 144, 152, 167, 172, 180, 192, 196, 216, 234, 256,
+    258, 512, 1024,
+  ];
 
-    const appIconSetPath = path.join(iosAssetsPath, 'AppIcon.appiconset');
-    fs.mkdirSync(appIconSetPath, {recursive: true}); // Create AppIcon set directory
+  const appIconSetPath = path.join(iosAssetsPath, 'AppIcon.appiconset');
+  fs.mkdirSync(appIconSetPath, {recursive: true}); // Create AppIcon set directory
 
-    // Generate icons for iOS
-    await Promise.all(
-      iosSizes.map(async size => {
-        const outputFileIOS = path.join(appIconSetPath, `${size}.png`);
-        await sharp(logoPath).resize(size, size).toFile(outputFileIOS);
-        console.log(`Generated iOS icon of size ${size}`);
-      }),
-    );
+  // Generate icons for iOS
+  await Promise.all(
+    iosSizes.map(async size => {
+      const outputFileIOS = path.join(appIconSetPath, `${size}.png`);
+      await sharp(logoPath).resize(size, size).toFile(outputFileIOS);
+      console.log(`Generated iOS icon of size ${size}`);
+    }),
+  );
 
-    // Copy Contents.json files
+  // Copy Contents.json files
+  await Promise.all([
     copyFileToDestination(
       generalContentsSourcePath,
       path.join(iosAssetsPath, 'Contents.json'),
-    );
+    ),
     copyFileToDestination(
       appIconContentsSourcePath,
       path.join(appIconSetPath, 'Contents.json'),
-    );
-  } catch (error) {
-    console.error('Error generating iOS icons:', error);
-  }
+    ),
+  ]);
 }
 
 /**
  * Generate icons for Android
  */
 async function generateAndroidIcons() {
-  try {
-    await Promise.all(
-      androidResourceDirectories.map(async ({size, folder}) => {
-        const outputFileStandard = path.join(
-          androidAssetsPath,
-          folder,
-          'ic_launcher.png',
-        );
-        await sharp(logoPath).resize(size, size).toFile(outputFileStandard);
-        console.log(
-          `Generated standard launcher icon for ${folder} at size ${size}px`,
-        );
+  await Promise.all(
+    androidResourceDirectories.map(async ({size, folder}) => {
+      const outputFolder = path.join(androidAssetsPath, folder);
+      const outputFileStandard = path.join(outputFolder, 'ic_launcher.png');
+      const outputFileRound = path.join(outputFolder, 'ic_launcher_round.png');
 
-        const outputFileRound = path.join(
-          androidAssetsPath,
-          folder,
-          'ic_launcher_round.png',
-        );
-        const circleMask = Buffer.from(
-          `<svg><circle cx="${size / 2}" cy="${size / 2}" r="${
-            size / 2
-          }" /></svg>`,
-        );
-        await sharp(logoPath)
-          .resize(size, size)
-          .composite([{input: circleMask, blend: 'dest-in'}])
-          .toFile(outputFileRound);
-        console.log(
-          `Generated round launcher icon for ${folder} at size ${size}px`,
-        );
-      }),
-    );
-  } catch (error) {
-    console.error('Error generating icons:', error);
-  }
+      // Generate standard icon
+      await sharp(logoPath).resize(size, size).toFile(outputFileStandard);
+      console.log(
+        `Generated standard launcher icon for ${folder} at size ${size}px`,
+      );
+
+      // Generate round icon
+      const circleMask = Buffer.from(
+        `<svg><circle cx="${size / 2}" cy="${size / 2}" r="${
+          size / 2
+        }" /></svg>`,
+      );
+      await sharp(logoPath)
+        .resize(size, size)
+        .composite([{input: circleMask, blend: 'dest-in'}])
+        .toFile(outputFileRound);
+      console.log(
+        `Generated round launcher icon for ${folder} at size ${size}px`,
+      );
+    }),
+  );
 }
 
 // Execute icon generation
 (async () => {
-  await generateIOSIcons();
-  await generateAndroidIcons();
+  try {
+    await Promise.all([generateIOSIcons(), generateAndroidIcons()]);
+  } catch (error) {
+    console.error('Error during icon generation:', error);
+  }
 })();
