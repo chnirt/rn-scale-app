@@ -80,6 +80,6 @@ To learn more about React Native, take a look at the following resources:
 
 # Preference
 
-- https://www.figma.com/file/JDBuOlnGHDnwLoPz7AVMbh/Login-%26-Register-App-UI-Kit-(Community)?node-id=12%3A44&mode=dev
+- https://www.figma.com/community/file/1117753494561810315/login-register-app-ui-kit
 - https://www.figma.com/community/file/978681400875967088
 - https://reintech.io/blog/best-react-native-libraries-for-creating-responsive-layouts-tutorial-for-react-developers
