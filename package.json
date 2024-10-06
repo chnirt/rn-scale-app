@@ -14,6 +14,7 @@
     "generate-splash-screen": "ts-node scripts/generate-splash-screen.ts"
   },
   "dependencies": {
+    "@inquirer/prompts": "^6.0.1",
     "@react-navigation/native": "6.1.18",
     "@react-navigation/native-stack": "6.11.0",
     "@types/node": "^22.7.4",
