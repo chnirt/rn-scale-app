@@ -3,6 +3,12 @@ import path from 'path';
 import sharp from 'sharp';
 import {exec} from 'child_process';
 
+// Define the project name from package.json
+const packageJsonPath = path.join(__dirname, '..', 'package.json');
+const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+const projectName = packageJson.name; // Convert to lowercase
+const lowerProjectName = projectName.toLowerCase(); // Convert to lowercase
+
 // Define paths for important files
 const paths = {
   settingsGradle: path.join(__dirname, '..', 'android', 'settings.gradle'),
@@ -16,7 +22,7 @@ const paths = {
     'main',
     'java',
     'com',
-    'scaleapp',
+    lowerProjectName,
     'MainActivity.java',
   ),
   launchScreenXml: path.join(__dirname, 'launch_screen.xml'),
@@ -66,12 +72,12 @@ const paths = {
     'values',
     'styles.xml',
   ),
-  appDelegate: path.join(__dirname, '..', 'ios', 'ScaleApp', 'AppDelegate.mm'),
+  appDelegate: path.join(__dirname, '..', 'ios', projectName, 'AppDelegate.mm'),
   xcodeAssetsPath: path.join(
     __dirname,
     '..',
     'ios',
-    'ScaleApp',
+    projectName,
     'Images.xcassets',
     'LaunchImage.imageset',
   ),
@@ -79,7 +85,7 @@ const paths = {
     __dirname,
     '..',
     'ios',
-    'ScaleApp',
+    projectName,
     'LaunchScreen.storyboard',
   ),
 };
