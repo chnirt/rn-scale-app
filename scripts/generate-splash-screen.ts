@@ -2,101 +2,31 @@ import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
 import {exec} from 'child_process';
+import {input} from '@inquirer/prompts';
 
-// Define the project name from package.json
-const packageJsonPath = path.join(__dirname, '..', 'package.json');
-const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-const projectName = packageJson.name; // Convert to lowercase
-const lowerProjectName = projectName.toLowerCase(); // Convert to lowercase
+// Prompt for sourceImagePath and projectName using input
+async function promptUser() {
+  const sourceImagePath = await input({
+    message: 'Please provide the path to the source image:',
+    validate: (input: string) => {
+      if (!input || !fs.existsSync(input)) {
+        return 'Error: Valid source image path is required. Please provide a correct path.';
+      }
+      return true;
+    },
+  });
 
-// Define paths for important files
-const paths = {
-  settingsGradle: path.join(__dirname, '..', 'android', 'settings.gradle'),
-  buildGradle: path.join(__dirname, '..', 'android', 'app', 'build.gradle'),
-  mainActivity: path.join(
-    __dirname,
-    '..',
-    'android',
-    'app',
-    'src',
-    'main',
-    'java',
-    'com',
-    lowerProjectName,
-    'MainActivity.java',
-  ),
-  launchScreenXml: path.join(__dirname, 'launch_screen.xml'),
-  sourceImagePath: path.join(__dirname, 'launch_screen.png'),
-  destinationImagePath: path.join(
-    __dirname,
-    '..',
-    'android',
-    'app',
-    'src',
-    'main',
-    'res',
-    'drawable',
-    'launch_screen.png',
-  ),
-  layoutLaunchScreen: path.join(
-    __dirname,
-    '..',
-    'android',
-    'app',
-    'src',
-    'main',
-    'res',
-    'layout',
-    'launch_screen.xml',
-  ),
-  colorsXmlSource: path.join(__dirname, 'colors.xml'),
-  colorsXmlDestination: path.join(
-    __dirname,
-    '..',
-    'android',
-    'app',
-    'src',
-    'main',
-    'res',
-    'values',
-    'colors.xml',
-  ),
-  stylesXml: path.join(
-    __dirname,
-    '..',
-    'android',
-    'app',
-    'src',
-    'main',
-    'res',
-    'values',
-    'styles.xml',
-  ),
-  appDelegate: path.join(__dirname, '..', 'ios', projectName, 'AppDelegate.mm'),
-  xcodeAssetsPath: path.join(
-    __dirname,
-    '..',
-    'ios',
-    projectName,
-    'Images.xcassets',
-    'LaunchImage.imageset',
-  ),
-  storyboardPath: path.join(
-    __dirname,
-    '..',
-    'ios',
-    projectName,
-    'LaunchScreen.storyboard',
-  ),
-};
+  const projectName = await input({
+    message: 'Please provide the project name:',
+    validate: (input: string) =>
+      input ? true : 'Error: Package name is required.',
+  });
 
-// Splash screen configuration
-interface SplashConfig {
-  imports: string[];
-  onCreateMethod: string;
+  return {sourceImagePath, projectName};
 }
 
-const splashConfig: SplashConfig = {
+// Splash screen configuration
+const splashConfig = {
   imports: [
     'import android.os.Bundle;',
     'import org.devio.rn.splashscreen.SplashScreen;',
@@ -110,57 +40,91 @@ const splashConfig: SplashConfig = {
 };
 
 // Utility functions for file operations
-const readFile = (filePath: string): string =>
-  fs.readFileSync(filePath, 'utf8');
-const writeFile = (filePath: string, content: string): void =>
+const readFile = (filePath: string) => fs.readFileSync(filePath, 'utf8');
+const writeFile = (filePath: string, content: string) =>
   fs.writeFileSync(filePath, content, 'utf8');
+const copyFile = (source: string, destination: string) =>
+  fs.copyFileSync(source, destination);
 
-// Function to update settings.gradle
-function updateSettingsGradle(): void {
+// Android Update Functions
+function updateAndroidSettingsGradle() {
+  const settingsGradle = path.join(
+    __dirname,
+    '..',
+    'android',
+    'settings.gradle',
+  );
   const additionalLines = `
 include ':react-native-splash-screen'
 project(':react-native-splash-screen').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-splash-screen/android')`;
 
-  const settingsContent = readFile(paths.settingsGradle);
+  const settingsContent = readFile(settingsGradle);
   if (!settingsContent.includes('react-native-splash-screen')) {
-    fs.appendFileSync(paths.settingsGradle, additionalLines);
+    fs.appendFileSync(settingsGradle, additionalLines);
     console.log(
       'Updated settings.gradle to include react-native-splash-screen.',
     );
   }
 }
 
-// Function to update build.gradle
-function updateBuildGradle(): void {
+function updateAndroidBuildGradle() {
+  const buildGradle = path.join(
+    __dirname,
+    '..',
+    'android',
+    'app',
+    'build.gradle',
+  );
   const dependencyLine =
     "    implementation project(':react-native-splash-screen')\n";
-  const buildGradleContent = readFile(paths.buildGradle);
+  const buildGradleContent = readFile(buildGradle);
 
   if (!buildGradleContent.includes(dependencyLine.trim())) {
     const updatedBuildGradle = buildGradleContent.replace(
       'dependencies {',
       `dependencies {\n${dependencyLine}`,
     );
-    writeFile(paths.buildGradle, updatedBuildGradle);
+    writeFile(buildGradle, updatedBuildGradle);
     console.log('Added react-native-splash-screen dependency to build.gradle');
   }
 }
 
-// Function to update MainActivity.java
-function updateMainActivity(): void {
-  const data = readFile(paths.mainActivity);
-  const packageStatement = 'package com.scaleapp;';
+function updateAndroidMainActivity(projectName: string) {
+  const mainActivity = path.join(
+    __dirname,
+    '..',
+    'android',
+    'app',
+    'src',
+    'main',
+    'java',
+    'com',
+    String(projectName).toLowerCase(),
+    'MainActivity.java',
+  );
+  const data = readFile(mainActivity);
 
-  if (data.includes(packageStatement)) {
+  // Regex to find the package declaration
+  const packageRegex = /package\s+[\w.]+;/;
+
+  const packageMatch = data.match(packageRegex);
+
+  if (packageMatch) {
     let updatedData = data;
 
-    // Add imports
-    splashConfig.imports.forEach(imp => {
+    // Add imports for SplashScreen and Bundle
+    const imports = [
+      'import android.os.Bundle;',
+      'import org.devio.rn.splashscreen.SplashScreen;',
+    ];
+
+    imports.forEach(imp => {
       if (!data.includes(imp)) {
         updatedData = updatedData.replace(
-          packageStatement,
-          `${packageStatement}\n${imp}`,
+          packageMatch[0], // replace the whole package line
+          `${packageMatch[0]}\n${imp}`, // add import below package
         );
+        console.log(`Added import statement: ${imp}`);
       }
     });
 
@@ -180,34 +144,67 @@ function updateMainActivity(): void {
       }
     }
 
-    writeFile(paths.mainActivity, updatedData);
+    writeFile(mainActivity, updatedData);
     console.log(
       'Successfully updated MainActivity.java with splash screen code.',
     );
   }
 }
 
-// Function to copy files
-function copyFile(source: string, destination: string): void {
-  fs.copyFile(source, destination, err => {
-    if (err) {
-      console.error(`Error copying file: ${err}`);
-    } else {
-      console.log(`Successfully copied file to ${destination}`);
-    }
-  });
+function updateAndroidResources(sourceImagePath: string) {
+  const launchScreenXml = path.join(__dirname, 'launch_screen.xml');
+  const layoutLaunchScreen = path.join(
+    __dirname,
+    '..',
+    'android',
+    'app',
+    'src',
+    'main',
+    'res',
+    'layout',
+    'launch_screen.xml',
+  );
+  const destinationImagePath = path.join(
+    __dirname,
+    '..',
+    'android',
+    'app',
+    'src',
+    'main',
+    'res',
+    'drawable',
+    'launch_screen.png',
+  );
+  const colorsXmlSource = path.join(__dirname, 'colors.xml');
+  const colorsXmlDestination = path.join(
+    __dirname,
+    '..',
+    'android',
+    'app',
+    'src',
+    'main',
+    'res',
+    'values',
+    'colors.xml',
+  );
+  copyFile(launchScreenXml, layoutLaunchScreen);
+  copyFile(sourceImagePath, destinationImagePath);
+  copyFile(colorsXmlSource, colorsXmlDestination);
 }
 
-// Update other resources
-function updateResources(): void {
-  copyFile(paths.launchScreenXml, paths.layoutLaunchScreen);
-  copyFile(paths.sourceImagePath, paths.destinationImagePath);
-  copyFile(paths.colorsXmlSource, paths.colorsXmlDestination);
-}
-
-// Function to update styles.xml
-function updateStylesXml(): void {
-  const data = readFile(paths.stylesXml);
+function updateAndroidStylesXml() {
+  const stylesXml = path.join(
+    __dirname,
+    '..',
+    'android',
+    'app',
+    'src',
+    'main',
+    'res',
+    'values',
+    'styles.xml',
+  );
+  const data = readFile(stylesXml);
   const translucentItem =
     '\t<item name="android:windowIsTranslucent">true</item>';
 
@@ -218,21 +215,31 @@ function updateStylesXml(): void {
       styleStart,
       `${styleStart}\n    ${translucentItem}`,
     );
-    writeFile(paths.stylesXml, updatedContent);
+    writeFile(stylesXml, updatedContent);
     console.log(
       'Successfully updated styles.xml with android:windowIsTranslucent.',
     );
   }
 }
 
-// Function to update AppDelegate.mm
-function updateAppDelegate(): void {
-  const data = readFile(paths.appDelegate);
+// iOS Update Functions
+function updateiOSAppDelegate(projectName: string) {
+  const appDelegate = path.join(
+    __dirname,
+    '..',
+    'ios',
+    projectName,
+    'AppDelegate.mm',
+  );
+  const data = readFile(appDelegate);
   const importLine = '#import "RNSplashScreen.h"\n';
   const splashScreenCode = `BOOL didFinish = [super application:application didFinishLaunchingWithOptions:launchOptions];
-  [RNSplashScreen show]; // Show the splash screen\n\t`;
+  [RNSplashScreen show]; // Show the splash screen
+  return didFinish;`;
 
   let updatedData = data;
+
+  // Check and add import line for RNSplashScreen
   if (!data.includes(importLine.trim())) {
     updatedData = updatedData.replace(
       /#import <React\/RCTBundleURLProvider.h>/,
@@ -241,76 +248,72 @@ function updateAppDelegate(): void {
     console.log('Added import statement for RNSplashScreen.');
   }
 
-  if (!data.includes('[RNSplashScreen show];')) {
-    const launchOptionsIndex = updatedData.indexOf(
-      'return [super application:application didFinishLaunchingWithOptions:launchOptions];',
+  // Update the didFinishLaunchingWithOptions method
+  const launchOptionsIndex = updatedData.indexOf(
+    'return [super application:application didFinishLaunchingWithOptions:launchOptions];',
+  );
+
+  if (launchOptionsIndex !== -1) {
+    // Remove the existing return statement
+    updatedData = updatedData.replace(
+      /return \[super application:application didFinishLaunchingWithOptions:launchOptions\];/,
+      splashScreenCode,
     );
-    if (launchOptionsIndex !== -1) {
-      updatedData = `${updatedData.slice(
-        0,
-        launchOptionsIndex,
-      )}${splashScreenCode}${updatedData.slice(launchOptionsIndex)}`;
-      console.log('Added splash screen display code to AppDelegate.mm.');
-    }
+    console.log(
+      'Updated didFinishLaunchingWithOptions to include splash screen code in AppDelegate.mm.',
+    );
   }
 
-  writeFile(paths.appDelegate, updatedData);
+  writeFile(appDelegate, updatedData);
 }
 
-// Function to update the LaunchScreen.storyboard
-const updateLaunchScreenStoryboard = (): void => {
-  // Read the existing storyboard file
-  const readStoryboard = (): string => {
-    return fs.readFileSync(paths.storyboardPath, 'utf-8');
-  };
+const updateLaunchScreenStoryboard = (projectName: string) => {
+  const storyboardPath = path.join(
+    __dirname,
+    '..',
+    'ios',
+    projectName,
+    'LaunchScreen.storyboard',
+  );
+  const readStoryboard = (): string => fs.readFileSync(storyboardPath, 'utf-8');
 
-  // Write updated content back to the storyboard file
-  const writeStoryboard = (content: string): void => {
-    fs.writeFileSync(paths.storyboardPath, content, 'utf-8');
-  };
+  const writeStoryboard = (content: string): void =>
+    fs.writeFileSync(storyboardPath, content, 'utf-8');
 
-  // Update storyboard content
   const updateStoryboard = (content: string): string => {
-    // Update XML version and toolsVersion
     content = content.replace(
       /<document.*?>/,
       '<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="22155" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="01J-lp-oVM">',
     );
 
-    // Remove specified labels
     const labelsToRemove = [
-      /<label[^>]*>.*?<\/label>\s*/gs, // This will remove any label
+      /<label[^>]*>.*?<\/label>\s*/gs,
       /<color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"\/>\s*/g,
-      /<constraints>.*?<\/constraints>\s*/gs, // Remove constraints
+      /<constraints>.*?<\/constraints>\s*/gs,
     ];
 
     labelsToRemove.forEach(regex => {
       content = content.replace(regex, '');
     });
 
-    // Define the new <imageView> element to insert
     const newImageView = `
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="LaunchImage" translatesAutoresizingMaskIntoConstraints="NO" id="AEW-P6-hcz">
                                 <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             </imageView>`;
 
-    // Check if newImageView already exists in the content
-    if (!content.includes('<imageView id="k1D-WG-FdW"')) {
-      // Insert the new <imageView> after <subviews>
+    if (!content.includes('<imageView id="AEW-P6-hcz"')) {
       content = content.replace(/(<subviews>)/, `$1${newImageView}`);
-      console.log('After ImageView Insertion:', content); // Log after insertion
+      console.log('ImageView inserted into storyboard.');
     } else {
-      console.log('ImageView already exists, skipping insertion.');
+      console.log('ImageView already exists in the storyboard.');
     }
 
-    // Update plugin version
     content = content.replace(
       /<plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15704"\s*\/>/,
       '<plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22131"/>',
     );
 
-    // Add resources section with an image resource
     if (!content.includes('<resources>')) {
       const resourcesSection = `
     <resources>
@@ -325,18 +328,24 @@ const updateLaunchScreenStoryboard = (): void => {
     return content;
   };
 
-  // Main logic to execute the update
   const originalContent = readStoryboard();
   const updatedContent = updateStoryboard(originalContent);
   writeStoryboard(updatedContent);
-  console.log('Storyboard updated successfully!');
 };
 
 // Function to create splash screens from a logo
-function createSplashScreen() {
+function createSplashScreen(sourceImagePath: string, projectName: string) {
+  const xcodeAssetsPath = path.join(
+    __dirname,
+    '..',
+    'ios',
+    projectName,
+    'Images.xcassets',
+    'LaunchImage.imageset',
+  );
   // Ensure Assets.xcassets exists
-  if (!fs.existsSync(paths.xcodeAssetsPath)) {
-    fs.mkdirSync(paths.xcodeAssetsPath, {recursive: true});
+  if (!fs.existsSync(xcodeAssetsPath)) {
+    fs.mkdirSync(xcodeAssetsPath, {recursive: true});
   }
 
   // Resize and create the files
@@ -347,10 +356,10 @@ function createSplashScreen() {
   ];
 
   splashScreenFiles.forEach(fileName => {
-    const splashScreenPath = path.join(paths.xcodeAssetsPath, fileName);
+    const splashScreenPath = path.join(xcodeAssetsPath, fileName);
 
     // Resize image if necessary (you can adjust the dimensions)
-    sharp(paths.sourceImagePath)
+    sharp(sourceImagePath)
       .resize(1242, 2688) // Adjust dimensions as needed
       .toFile(splashScreenPath, err => {
         if (err) {
@@ -377,19 +386,6 @@ function createSplashScreen() {
       }
     }
   });
-}
-
-// Function to execute all updates
-async function executeUpdates() {
-  updateSettingsGradle();
-  updateBuildGradle();
-  updateMainActivity();
-  updateResources();
-  updateStylesXml();
-  updateAppDelegate();
-  updateLaunchScreenStoryboard();
-  await createSplashScreen(); // Wait for splash screen creation
-  await restartMetroBundler(); // Ensure Metro is restarted after changes
 }
 
 // Function to restart the Metro bundler
@@ -421,5 +417,21 @@ function restartMetroBundler() {
   });
 }
 
-// Call the function to execute all updates
-executeUpdates();
+(async () => {
+  const {sourceImagePath, projectName} = await promptUser();
+  // Update Android
+  updateAndroidSettingsGradle();
+  updateAndroidBuildGradle();
+  updateAndroidMainActivity(projectName);
+  updateAndroidResources(sourceImagePath);
+  updateAndroidStylesXml();
+
+  // Update iOS
+  updateiOSAppDelegate(projectName);
+  updateLaunchScreenStoryboard(projectName);
+  createSplashScreen(sourceImagePath, projectName);
+
+  await restartMetroBundler(); // Ensure Metro is restarted after changes
+
+  console.log('Update completed for both Android and iOS.');
+})();
